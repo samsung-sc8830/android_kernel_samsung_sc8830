@@ -11,11 +11,12 @@ set -e -o pipefail
 
 PLATFORM=sc8830
 DEFCONFIG=gtel3g_defconfig
-NAME=RZ_kernel
-VERSION=v3.5
+NAME=Xen-N-gtel3g
+VERSION=v1.0
 
 export ARCH=arm
 export LOCALVERSION=-${VERSION}
+export LC_ALL=C
 
 KERNEL_PATH=$(pwd)
 KERNEL_ZIP=${KERNEL_PATH}/kernel_zip
@@ -39,7 +40,7 @@ function build() {
 	BUILD_START=$(date +"%s");
 	echo -e "$cyan"
 	echo "***********************************************";
-	echo "              Compiling RZ kernel          	     ";
+	echo "              Compiling Xen-N kernel          	     ";
 	echo -e "***********************************************$nocol";
 	echo -e "$red";
 
@@ -51,8 +52,8 @@ function build() {
 	make O=output ${DEFCONFIG};
 	echo -e "$red";
 	echo -e "Building kernel...$nocol";
-	make O=output -j${JOBS};
-	make O=output -j${JOBS} dtbs;
+	make O=output -j${JOBS} CROSS_COMPILE=$CROSS_COMPILE ARCH=$ARCH SUBARCH=$ARCH;
+	make O=output -j${JOBS} CROSS_COMPILE=$CROSS_COMPILE ARCH=$ARCH SUBARCH=$ARCH dtbs;
 	./scripts/mkdtimg.sh -i ${KERNEL_PATH}/arch/arm/boot/dts/ -o dt.img;
 	find ${KERNEL_PATH} -name "Image" -exec mv -f {} ${KERNEL_ZIP}/tools \;
 	find ${KERNEL_PATH} -name "dt.img" -exec mv -f {} ${KERNEL_ZIP}/tools \;
@@ -96,7 +97,7 @@ function main() {
 	read -p "Please specify Toolchain path: " tcpath;
 	if [ "${tcpath}" == "" ]; then
 		echo -e "$red"
-		export CROSS_COMPILE=/home/ma3a_xata/1/linaro/bin/arm-eabi-;
+		export CROSS_COMPILE=$(pwd)/../gcc/bin/arm-eabi-;
 		echo -e "No toolchain path found. Using default local one:$nocol ${CROSS_COMPILE}";
 	else
 		export CROSS_COMPILE=${tcpath};
@@ -106,13 +107,13 @@ function main() {
 	if [ "${USE_CCACHE}" == "1" ]; then
 		CCACHE_PATH=/usr/bin/ccache;
 		export CROSS_COMPILE="${CCACHE_PATH} ${CROSS_COMPILE}";
-		export JOBS=8;
+		export JOBS=16;
 		echo -e "$red";
 		echo -e "You have enabled ccache through *export USE_CCACHE=1*, now using ccache...$nocol";
 	fi;
 
 	echo -e "***************************************************************";
-	echo "      RZ Kernel for Samsung Galaxy Tab E SM-T561";
+	echo "      Xen-N Kernel for Samsung Galaxy Tab E SM-T561";
 	echo -e "***************************************************************";
 	echo "Choices:";
 	echo "1. Cleanup source";
@@ -131,7 +132,7 @@ function main() {
 		*) echo
 		   echo "Invalid choice entered. Exiting..."
 		   sleep 2;
-		   exit 1;;
+		   #exit 1;;
 	esac
 }
 
